@@ -37,10 +37,77 @@ public class XMLTest {
      * JUnit supports temporary files and folders that are cleaned up after the test.
      * https://garygregory.wordpress.com/2010/01/20/junit-tip-use-rules-to-manage-temporary-files-and-folders/ 
      */
+
+
+
+
+
+
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
 
-    
+    @Test
+    public void testJsonObjectWithJsonPointer() {
+        String xmlStr =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+                        "<addresses xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""+
+                        "   xsi:noNamespaceSchemaLocation='test.xsd'>\n"+
+                        "    <address>\n"+
+                        "       <name>Changhao Li</name>\n"+
+                        "       <street>1402 Elements Way</street>\n"+
+                        "       <age value=24/>\n" +
+                        "   </address>\n"+
+                        "</addresses>";
+
+        String expectedStr =
+                "{\"addresses\":{\"address\":{\"name\":\"Changhao Li\", \"street\":\"1402 Elements Way\"},"+
+                        "\"xsi:noNamespaceSchemaLocation\":"+
+                        "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
+                        "XMLSchema-instance\"}}";
+
+
+        JSONObject expectedJsonObject = new JSONObject(expectedStr);
+        Reader reader = new StringReader(xmlStr);
+        JSONPointer pointer = new JSONPointer("/addresses/address/age");
+        JSONObject jsonObject = XML.toJSONObject(reader, pointer);
+        Util.compareActualVsExpectedJsonObjects(jsonObject,expectedJsonObject);
+    }
+
+
+
+
+    @Test
+    public void testJsonObjectWithReplacement() {
+        String xmlStr =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+                        "<addresses xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""+
+                        "   xsi:noNamespaceSchemaLocation='test.xsd'>\n"+
+                        "    <address>\n"+
+                        "       <name>Changhao Li</name>\n"+
+                        "       <street>1402 Elements Way</street>\n"+
+                        "       <age value=24/>\n" +
+                        "   </address>\n"+
+                        "</addresses>";
+
+
+
+        String expectedStr =
+                "{\"addresses\":{\"address\":{\"name\":\"Changhao Li\", \"street\":\"1402 Elements Way\"},"+
+                        "\"xsi:noNamespaceSchemaLocation\":"+
+                        "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
+                        "XMLSchema-instance\"}}";
+
+
+        JSONObject expectedJsonObject = new JSONObject(expectedStr);
+        String replaceXmlStr = "<replaceObject>replace</replaceObject>";
+        JSONObject replaceObject = XML.toJSONObject(replaceXmlStr);
+        Reader reader = new StringReader(xmlStr);
+        JSONPointer pointer = new JSONPointer("/addresses/address/street");
+        JSONObject jsonObject = XML.toJSONObject(reader, pointer, replaceObject);
+        Util.compareActualVsExpectedJsonObjects(jsonObject,expectedJsonObject);
+
+    }
+
     /**
      * JSONObject from a null XML string.
      * Expects a NullPointerException
@@ -51,6 +118,7 @@ public class XMLTest {
         JSONObject jsonObject = XML.toJSONObject(xmlStr);
         assertTrue("jsonObject should be empty", jsonObject.isEmpty());
     }
+
 
     /**
      * Empty JSONObject from an empty XML string.
