@@ -26,8 +26,9 @@ do not need to parse the whole xml file, it will improve the performance
 
 In `parse3`, we add early return which means if we have already encountered  
 the target tag we want to replace, we will stop parse and early return, so that we  
-do not need to parse the target tag smaller json object. In the scenario which the object
-we want to replace is very large, it will improve the performance.  
+do not need to parse the target tag smaller json object.   
+In the scenario which the object we want to replace is very large, it will improve the performance.
+
 
 
 
