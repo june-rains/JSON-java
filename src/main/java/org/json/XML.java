@@ -515,7 +515,7 @@ public class XML {
      * @return true if the close tag is processed.
      * @throws JSONException Thrown if any parsing error occurs.
      */
-    private static boolean parse2(XMLTokener x, JSONObject context, String name, XMLParserConfiguration config, int currentNestingDepth, String targetTag, boolean[] parseFinish, JSONObject res)
+    private static boolean parse2(XMLTokener x, JSONObject context, String name, XMLParserConfiguration config, int currentNestingDepth, String targetTag, boolean[] parseFinish, JSONObject res, int targetDepth)
             throws JSONException {
 
         if(parseFinish[0]) {
@@ -604,6 +604,11 @@ public class XML {
 
         } else {
             tagName = (String) token;
+            if(targetDepth == currentNestingDepth) {
+                if(!tagName.equals(targetTag)) {
+                    throw x.syntaxError("path pointer format error: path not exist!");
+                }
+            }
             token = null;
             jsonObject = new JSONObject();
             boolean nilAttributeFound = false;
@@ -704,7 +709,7 @@ public class XML {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
 
-                            if (parse2(x, jsonObject, tagName, config, currentNestingDepth + 1, targetTag, parseFinish, res)) {
+                            if (parse2(x, jsonObject, tagName, config, currentNestingDepth + 1, targetTag, parseFinish, res, targetDepth)) {
                                 if(parseFinish[0]) {
                                     return true;
                                 }
@@ -769,7 +774,7 @@ public class XML {
      * @return true if the close tag is processed.
      * @throws JSONException Thrown if any parsing error occurs.
      */
-    private static boolean parse3(XMLTokener x, JSONObject context, String name, XMLParserConfiguration config, int currentNestingDepth, String targetTag, JSONObject replaceObject, boolean[] seenTag)
+    private static boolean parse3(XMLTokener x, JSONObject context, String name, XMLParserConfiguration config, int currentNestingDepth, String targetTag, JSONObject replaceObject, int targetDepth)
             throws JSONException {
         char c;
         int i;
@@ -854,6 +859,11 @@ public class XML {
 
         } else {
             tagName = (String) token;
+            if(targetDepth == currentNestingDepth) {
+                if(!tagName.equals(targetTag)) {
+                    throw x.syntaxError("path pointer format error: path not exist!");
+                }
+            }
             token = null;
             jsonObject = new JSONObject();
             boolean nilAttributeFound = false;
@@ -945,7 +955,7 @@ public class XML {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
 
-                            if (tagName.equals(targetTag) || parse3(x, jsonObject, tagName, config, currentNestingDepth + 1, targetTag, replaceObject, seenTag)) {
+                            if (tagName.equals(targetTag) || parse3(x, jsonObject, tagName, config, currentNestingDepth + 1, targetTag, replaceObject, targetDepth)) {
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {
@@ -959,7 +969,7 @@ public class XML {
                                 } else {
                                     if(tagName.equals(targetTag)) {
                                         x.skipPast("/" + targetTag + ">");
-                                        context.accumulate("replaceKey", replaceObject);
+                                        context.accumulate(tagName, replaceObject.opt(tagName));
                                     } else {
                                         if (jsonObject.length() == 0) {
                                             context.accumulate(tagName, "");
@@ -996,6 +1006,7 @@ public class XML {
         String pathStr = path.toString();
         String[] pathArr = pathStr.split("/");
         int pathDepth = pathArr.length;
+        int targetDepth = pathDepth-2;
         String targetTag = pathArr[pathDepth-1];
         boolean[] parseFinish = new boolean[]{false};
         JSONObject res = new JSONObject();
@@ -1003,7 +1014,7 @@ public class XML {
         while (x.more()) {
             x.skipPast("<");
             if(x.more()) {
-                parse2(x, jo, null, XMLParserConfiguration.ORIGINAL, 0, targetTag, parseFinish, res);
+                parse2(x, jo, null, XMLParserConfiguration.ORIGINAL, 0, targetTag, parseFinish, res, targetDepth);
                 if(parseFinish[0]) {
                     break;
                 }
@@ -1029,13 +1040,13 @@ public class XML {
         String pathStr = path.toString();
         String[] pathArr = pathStr.split("/");
         int pathDepth = pathArr.length;
+        int targetDepth = pathDepth-2;
         String targetTag = pathArr[pathDepth-1];
-        boolean[] seenTag = new boolean[]{false};
 
         while (x.more()) {
             x.skipPast("<");
             if(x.more()) {
-                parse3(x, jo, null, XMLParserConfiguration.ORIGINAL, 0, targetTag, replacement, seenTag);
+                parse3(x, jo, null, XMLParserConfiguration.ORIGINAL, 0, targetTag, replacement, targetDepth);
 
             }
         }

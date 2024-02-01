@@ -27,6 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import javax.lang.model.util.Elements;
+
 
 /**
  * Tests for JSON-Java XML.java
@@ -37,10 +39,6 @@ public class XMLTest {
      * JUnit supports temporary files and folders that are cleaned up after the test.
      * https://garygregory.wordpress.com/2010/01/20/junit-tip-use-rules-to-manage-temporary-files-and-folders/ 
      */
-
-
-
-
 
 
     @Rule
@@ -59,18 +57,38 @@ public class XMLTest {
                         "   </address>\n"+
                         "</addresses>";
 
-        String expectedStr =
-                "{\"addresses\":{\"address\":{\"name\":\"Changhao Li\", \"street\":\"1402 Elements Way\"},"+
-                        "\"xsi:noNamespaceSchemaLocation\":"+
-                        "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
-                        "XMLSchema-instance\"}}";
-
+        String expectedStr = "{\"street\":\"1402 Elements Way\"}";
 
         JSONObject expectedJsonObject = new JSONObject(expectedStr);
         Reader reader = new StringReader(xmlStr);
-        JSONPointer pointer = new JSONPointer("/addresses/address/age");
+        JSONPointer pointer = new JSONPointer("/addresses/address/street");
         JSONObject jsonObject = XML.toJSONObject(reader, pointer);
         Util.compareActualVsExpectedJsonObjects(jsonObject,expectedJsonObject);
+    }
+
+
+    @Test
+    public void shouldHandleJsonObjectWithJsonPointerPathError() {
+        String xmlStr =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+                        "<addresses xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""+
+                        "   xsi:noNamespaceSchemaLocation='test.xsd'>\n"+
+                        "    <address>\n"+
+                        "       <name>Changhao Li</name>\n"+
+                        "       <street>1402 Elements Way</street>\n"+
+                        "       <age value=24/>\n" +
+                        "   </address>\n"+
+                        "</addresses>";
+        Reader reader = new StringReader(xmlStr);
+        JSONPointer pointer = new JSONPointer("/addresses/address/error");
+        try {
+            XML.toJSONObject(reader, pointer);
+            fail("Expecting a JSONException");
+        } catch (JSONException e) {
+            assertEquals("Expecting an exception message",
+                    "path pointer format error: path not exist! at 174 [character 12 line 4]",
+                    e.getMessage());
+        }
     }
 
 
@@ -92,21 +110,66 @@ public class XMLTest {
 
 
         String expectedStr =
-                "{\"addresses\":{\"address\":{\"name\":\"Changhao Li\", \"street\":\"1402 Elements Way\"},"+
+                "{\"addresses\":{\"address\":{\"name\":\"LCH\", \"street\":\"1000 Elements Way\"},"+
                         "\"xsi:noNamespaceSchemaLocation\":"+
                         "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
                         "XMLSchema-instance\"}}";
 
 
         JSONObject expectedJsonObject = new JSONObject(expectedStr);
-        String replaceXmlStr = "<replaceObject>replace</replaceObject>";
+        String replaceXmlStr =
+                "<address>\n" +
+                        "<name>LCH</name>\n"+
+                "       <street>1000 Elements Way</street>\n"+
+                "</address>\n";
         JSONObject replaceObject = XML.toJSONObject(replaceXmlStr);
         Reader reader = new StringReader(xmlStr);
-        JSONPointer pointer = new JSONPointer("/addresses/address/street");
+        JSONPointer pointer = new JSONPointer("/addresses/address/");
         JSONObject jsonObject = XML.toJSONObject(reader, pointer, replaceObject);
         Util.compareActualVsExpectedJsonObjects(jsonObject,expectedJsonObject);
-
     }
+
+
+    @Test
+    public void shouldHandleJsonObjectWithReplacementPathError() {
+        String xmlStr =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+                        "<addresses xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""+
+                        "   xsi:noNamespaceSchemaLocation='test.xsd'>\n"+
+                        "    <address>\n"+
+                        "       <name>Changhao Li</name>\n"+
+                        "       <street>1402 Elements Way</street>\n"+
+                        "       <age value=24/>\n" +
+                        "   </address>\n"+
+                        "</addresses>";
+
+
+        String expectedStr =
+                "{\"addresses\":{\"address\":{\"name\":\"LCH\", \"street\":\"1000 Elements Way\"},"+
+                        "\"xsi:noNamespaceSchemaLocation\":"+
+                        "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
+                        "XMLSchema-instance\"}}";
+
+
+        JSONObject expectedJsonObject = new JSONObject(expectedStr);
+        String replaceXmlStr =
+                "<address>\n" +
+                        "<name>LCH</name>\n"+
+                        "       <street>1000 Elements Way</street>\n"+
+                        "</address>\n";
+        JSONObject replaceObject = XML.toJSONObject(replaceXmlStr);
+        Reader reader = new StringReader(xmlStr);
+        JSONPointer pointer = new JSONPointer("/addresses/error");
+        try {
+            XML.toJSONObject(reader, pointer, replaceObject);
+            fail("Expecting a JSONException");
+        } catch (JSONException e) {
+            assertEquals("Expecting an exception message",
+                    "path pointer format error: path not exist! at 160 [character 12 line 3]",
+                    e.getMessage());
+        }
+    }
+
 
     /**
      * JSONObject from a null XML string.
