@@ -21,6 +21,7 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.json.*;
 import org.junit.Rule;
@@ -168,6 +169,40 @@ public class XMLTest {
                     "path pointer format error: path not exist! at 160 [character 12 line 3]",
                     e.getMessage());
         }
+    }
+
+
+    @Test
+    public void testJsonObjectWithKeyTransformer() {
+        String xmlStr =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+                        "<addresses xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""+
+                        "   xsi:noNamespaceSchemaLocation='test.xsd'>\n"+
+                        "    <address>\n"+
+                        "       <name>Changhao Li</name>\n"+
+                        "       <street>1402 Elements Way</street>\n"+
+                        "   </address>\n"+
+                        "</addresses>";
+
+        String expectedStr = "{\"swe262_addresses\":{\"swe262_address\":{\"swe262_name\":\"Changhao Li\", \"swe262_street\":\"1402 Elements Way\"},"+
+                "\"xsi:noNamespaceSchemaLocation\":"+
+                "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
+                "XMLSchema-instance\"}}";
+
+        JSONObject expectedJsonObject = new JSONObject(expectedStr);
+        Reader reader = new StringReader(xmlStr);
+
+
+        // You can define your own function here
+        Function<String, String> addPrefix = new Function<String, String>() {
+            @Override
+            public String apply(String t) {
+                return "swe262_" + t;
+            }
+        };
+
+        JSONObject jsonObject = XML.toJSONObject(reader, addPrefix);
+        Util.compareActualVsExpectedJsonObjects(jsonObject,expectedJsonObject);
     }
 
 
