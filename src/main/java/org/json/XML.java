@@ -1108,6 +1108,7 @@ public class XML {
                 // attribute = value
                 if (token instanceof String) {
                     string = (String) token;
+                    string = function.apply(string);
                     token = x.nextToken();
                     if (token == EQ) {
                         token = x.nextToken();

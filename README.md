@@ -30,5 +30,29 @@ do not need to parse the target tag smaller json object.
 In the scenario which the object we want to replace is very large, it will improve the performance.
 
 
+## Milestone3 Running Guide && Report 
 
+### Running Guide
+In this project, I wrote 1 overload `toJsonObject` functions along with
+1 parse functions called: `parse4`  
 
+In the `toJsonObject` and `parse4`, the parameter of `YOURTYPEHERE`  
+I chose `java.util.function Function` class to help me pass function as 
+parameter into our function  
+
+You can use my unit test to simply verify its correctness,  
+I wrote 1 unit tests called `testJsonObjectWithKeyTransformer`  
+
+In this test, you can define your own transformer function, in my test  
+I define the behavior of adding prefix `swe262_` to the every key,    
+you can define any other behavior to test if you want to :)  
+
+### Performance Report
+We change the logic of the parse function in `parse4`
+
+In `parse4`, we apply key transformer function logic when we parse the XML file.    
+So, comparing we parse the whole XML file and then do key transformer logic, it is
+more efficient to do transform logic when parsing.  
+
+In addition, we can change the key transformer logic by defining new function,   
+so the method we overload also improve code re-usability.  

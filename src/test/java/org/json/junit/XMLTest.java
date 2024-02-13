@@ -185,8 +185,8 @@ public class XMLTest {
                         "</addresses>";
 
         String expectedStr = "{\"swe262_addresses\":{\"swe262_address\":{\"swe262_name\":\"Changhao Li\", \"swe262_street\":\"1402 Elements Way\"},"+
-                "\"xsi:noNamespaceSchemaLocation\":"+
-                "\"test.xsd\",\"xmlns:xsi\":\"http://www.w3.org/2001/"+
+                "\"swe262_xsi:noNamespaceSchemaLocation\":"+
+                "\"test.xsd\",\"swe262_xmlns:xsi\":\"http://www.w3.org/2001/"+
                 "XMLSchema-instance\"}}";
 
         JSONObject expectedJsonObject = new JSONObject(expectedStr);
