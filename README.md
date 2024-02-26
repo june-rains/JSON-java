@@ -70,7 +70,7 @@ In this milestone, I focus on `Leaf Elements Only`,
 so the stream operations will stream JSONObject's all leaf node to be its `JSONNode`.  
 
 I wrote corresponding `toStream()` method in `JSONObject.java` file to support
-stream operation and wrote corresponding unit test in `JSONObjectTest.java`  
+stream operation and wrote corresponding unit test in `JSONObjectTest.java` 
 called `testStreamWithJsonObject`
 
 In the unit test, I created a JSONObject and do some stream process for  
