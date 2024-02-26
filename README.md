@@ -56,3 +56,22 @@ more efficient to do transform logic when parsing.
 
 In addition, we can change the key transformer logic by defining new function,   
 so the method we overload also improve code re-usability.  
+
+## Milestone4 Running Guide && Report
+
+### Running Guide
+In this project, I designed `JSONNode` class in `JSONObject.java` file  
+to support stream operation.
+
+Considering JSON are hierarchical structures, there can be many options  
+to determine the type of stream we can support.  
+
+In this milestone, I focus on `Leaf Elements Only`, so the stream operations
+will stream JSONObject's all leaf node to be its `JSONNode`.  
+
+I wrote corresponding `toStream()` method in `JSONObject.java` file to support
+stream operation and wrote corresponding unit test in `JSONObjectTest.java`  
+called `testStreamWithJsonObject`
+
+In the unit test, I created a JSONObject and do some stream process for  
+leaf node(JSONNode), you can adjust the code to do more testing if you want.  

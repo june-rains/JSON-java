@@ -26,7 +26,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.json.NumberConversionUtil.potentialNumber;
 import static org.json.NumberConversionUtil.stringToNumber;
@@ -85,6 +88,52 @@ import static org.json.NumberConversionUtil.stringToNumber;
  * @version 2016-08-15
  */
 public class JSONObject {
+
+    public static class JSONNode {
+        private String key;
+        private Object value;
+        private String path;
+
+        public JSONNode(String key, Object value, String path) {
+            this.key = key;
+            this.value = value;
+            this.path = path;
+        }
+
+        // Getters
+        public String getKey() { return key; }
+        public Object getValue() { return value; }
+        public String getPath() { return path; }
+    }
+
+    public Stream<JSONNode> toStream() {
+        return toStream("", this, null); // Start with an empty path and null key for the root
+    }
+
+    private Stream<JSONNode> toStream(String path, Object value, String parentKey) {
+        if (value instanceof JSONObject) {
+            JSONObject jsonObject = (JSONObject) value;
+            return jsonObject.keySet().stream()
+                    .flatMap(key -> toStream(constructPath(path, key), jsonObject.get(key), key));
+        } else if (value instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) value;
+            return IntStream.range(0, jsonArray.length())
+                    .mapToObj(index -> toStream(path + "[" + index + "]", jsonArray.get(index), parentKey))
+                    .flatMap(Function.identity());
+        } else {
+            return Stream.of(new JSONNode(parentKey, value, path));
+        }
+    }
+
+    private String constructPath(String parentPath, String key) {
+        if (parentPath.isEmpty()) {
+            return key; // Root element
+        } else {
+            return parentPath + "." + key; // Nested element
+        }
+    }
+
+
     /**
      * JSONObject.NULL is equivalent to the value that JavaScript calls null,
      * whilst Java's null is equivalent to the value that JavaScript calls

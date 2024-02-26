@@ -26,6 +26,8 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.json.CDL;
 import org.json.JSONArray;
@@ -75,6 +77,35 @@ public class JSONObjectTest {
      *  output to guarantee that we are always writing valid JSON. 
      */
     static final Pattern NUMBER_PATTERN = Pattern.compile("-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?");
+
+
+    @Test
+    public void testStreamWithJsonObject() {
+        String xml = "<Books><book><title>AAA</title><author>ASmith</author></book><book><title>BBB</title><author>BSmith</author></book></Books>";
+        JSONObject obj = XML.toJSONObject(xml);
+
+        List<String> nodePathsValuesList = new ArrayList<>();
+        List<String> expectedNodePathsValuesList = Arrays.asList("Node Path: Books.book[0].author, Value: ASmith", "Node Path: Books.book[0].title, Value: AAA", "Node Path: Books.book[1].author, Value: BSmith", "Node Path: Books.book[1].title, Value: BBB");
+        // Perform transformations based on node path
+        obj.toStream().forEach(node -> {
+            // Example: Print node paths and values
+            System.out.println("Node Path: " + node.getPath() + ", Value: " + node.getValue());
+            nodePathsValuesList.add("Node Path: " + node.getPath() + ", Value: " + node.getValue());
+        });
+        assertEquals(nodePathsValuesList, expectedNodePathsValuesList);
+
+
+        List<String> expectedTitles = Arrays.asList("AAA", "BBB");
+        // Extract titles directly without filtering by keys since paths are used
+        List<String> titles = obj.toStream()
+                .filter(node -> node.getPath().matches(".*\\.title$")) // Adjust regex as needed
+                .map(node -> node.getValue().toString())
+                .collect(Collectors.toList());
+        System.out.println(titles);
+        assertEquals(expectedTitles, titles);
+    }
+
+
 
     /**
      * Tests that the similar method is working as expected.
