@@ -3,7 +3,7 @@ package org.json.junit;
 /*
 Public Domain.
 */
-
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -21,6 +21,7 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 
 import org.json.*;
@@ -203,6 +204,41 @@ public class XMLTest {
 
         JSONObject jsonObject = XML.toJSONObject(reader, addPrefix);
         Util.compareActualVsExpectedJsonObjects(jsonObject,expectedJsonObject);
+    }
+
+
+    @Test
+    public void testToJSONObjectAsyncSuccess() throws InterruptedException {
+        String xml = "<test>value</test>";
+        XMLParserConfiguration config = new XMLParserConfiguration();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        XML.toJSONObject(new StringReader(xml), config, (JSONObject jo) -> {
+            Assert.assertEquals("value", jo.getString("test"));
+            latch.countDown();
+        }, (Exception e) -> {
+            Assert.fail("Should not have thrown an exception");
+            latch.countDown();
+        });
+
+        latch.await();  // Wait for the async operation to complete
+    }
+
+    @Test
+    public void testToJSONObjectAsyncFailure() throws InterruptedException {
+        String xml = "<test>";  // Malformed XML
+        XMLParserConfiguration config = new XMLParserConfiguration();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        XML.toJSONObject(new StringReader(xml), config, (JSONObject jo) -> {
+            Assert.fail("Should have thrown an exception");
+            latch.countDown();
+        }, (Exception e) -> {
+            Assert.assertNotNull(e);
+            latch.countDown();
+        });
+
+        latch.await();  // Wait for the async operation to complete
     }
 
 

@@ -9,6 +9,9 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.json.NumberConversionUtil.potentialNumber;
@@ -58,6 +61,8 @@ public class XML {
     public static final String NULL_ATTR = "xsi:nil";
 
     public static final String TYPE_ATTR = "xsi:type";
+
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
 
     /**
      * Creates an iterator for navigating Code Points in a string instead of
@@ -1293,6 +1298,24 @@ public class XML {
             }
         }
         return jo;
+    }
+
+    public static void toJSONObject(Reader reader, XMLParserConfiguration config, Consumer<JSONObject> onSuccess, Consumer<Exception> onError) {
+        executor.submit(() -> {
+            try {
+                JSONObject jo = new JSONObject();
+                XMLTokener x = new XMLTokener(reader);
+                while (x.more()) {
+                    x.skipPast("<");
+                    if (x.more()) {
+                        parse(x, jo, null, config, 0);
+                    }
+                }
+                onSuccess.accept(jo);
+            } catch (Exception e) {
+                onError.accept(e);
+            }
+        });
     }
 
 
