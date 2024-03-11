@@ -74,4 +74,43 @@ stream operation and wrote corresponding unit test in `JSONObjectTest.java`
 called `testStreamWithJsonObject`
 
 In the unit test, I created a JSONObject and do some stream process for  
-leaf node(JSONNode), you can adjust the code to do more testing if you want.  
+leaf node(JSONNode), you can adjust the code to do more testing if you want.
+
+
+## Milestone5 Running Guide & Report
+
+### Running Guide
+In this milestone, I introduced an enhancement to the library by adding an asynchronous version of the `toJSONObject` method. This new method allows for non-blocking XML to JSON conversion, enabling the client code to continue its execution and handle the results or errors through callback functions.
+
+To use the asynchronous `toJSONObject` method, you can follow this example:
+
+```java
+XML.toJSONObject(reader, config, 
+    (JSONObject jo) -> {
+        // Success callback: handle the JSONObject (jo)
+    },
+    (Exception e) -> {
+        // Error callback: handle the exception (e)
+    }
+);
+```
+Here, reader is the Reader object for the XML source, config is an instance of XMLParserConfiguration, and the two lambda expressions define the callbacks for handling success and error cases.
+
+
+### Unit Tests
+To ensure the correctness and efficiency of the asynchronous method, I wrote several unit tests:
+
+`testToJSONObjectAsyncSuccess`: This test verifies that the method correctly parses a valid XML string into a JSONObject asynchronously.
+
+`testToJSONObjectAsyncFailure`: This test checks that the method properly handles parsing errors and executes the error callback when parsing a malformed XML string.
+
+`testMultipleToJSONObjectAsync`: This test demonstrates the method's ability to handle multiple XML to JSON conversions concurrently, processing two valid XML strings in parallel.
+
+`testSuccessAndFailureToJSONObjectAsync`: This test runs two asynchronous operations in parallel, one expected to succeed and the other to fail, showcasing the method's ability to handle mixed scenarios concurrently.
+
+### Performance Report
+The addition of the asynchronous `toJSONObject` method significantly enhances the library's usability in scenarios involving large XML files or applications requiring non-blocking operations. By leveraging concurrent processing, the library can handle multiple XML to JSON conversions simultaneously, improving throughput and responsiveness in multi-threaded or I/O-bound environments.
+
+This asynchronous approach not only optimizes performance but also provides flexibility in handling the results and errors, enabling more robust and scalable applications.
+
+In conclusion, Milestone5 brings a crucial improvement to the XML to JSON conversion library, making it more versatile and suited for a wider range of applications, especially those requiring concurrent processing and non-blocking operations.

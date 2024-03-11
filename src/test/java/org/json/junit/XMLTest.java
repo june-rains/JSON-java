@@ -242,6 +242,61 @@ public class XMLTest {
     }
 
 
+    @Test
+    public void testMultipleToJSONObjectAsync() throws InterruptedException {
+        String xml1 = "<test>value1</test>";
+        String xml2 = "<test>value2</test>";
+        XMLParserConfiguration config = new XMLParserConfiguration();
+        CountDownLatch latch = new CountDownLatch(2); // Initialize with count 2 for two async tasks
+
+        XML.toJSONObject(new StringReader(xml1), config, (JSONObject jo) -> {
+            Assert.assertEquals("value1", jo.getString("test"));
+            latch.countDown(); // Count down on successful parsing
+        }, (Exception e) -> {
+            Assert.fail("Should not have thrown an exception for XML1");
+            latch.countDown();
+        });
+
+        XML.toJSONObject(new StringReader(xml2), config, (JSONObject jo) -> {
+            Assert.assertEquals("value2", jo.getString("test"));
+            latch.countDown(); // Count down on successful parsing
+        }, (Exception e) -> {
+            Assert.fail("Should not have thrown an exception for XML2");
+            latch.countDown();
+        });
+
+        latch.await();  // Wait for both async operations to complete
+    }
+
+    @Test
+    public void testSuccessAndFailureToJSONObjectAsync() throws InterruptedException {
+        String xmlSuccess = "<test>value</test>";
+        String xmlFailure = "<test>"; // Malformed XML
+        XMLParserConfiguration config = new XMLParserConfiguration();
+        CountDownLatch latch = new CountDownLatch(2); // One for success, one for failure
+
+        // Success case
+        XML.toJSONObject(new StringReader(xmlSuccess), config, (JSONObject jo) -> {
+            Assert.assertEquals("value", jo.getString("test"));
+            latch.countDown(); // Count down on successful parsing
+        }, (Exception e) -> {
+            Assert.fail("Should not have thrown an exception for successful XML");
+            latch.countDown();
+        });
+
+        // Failure case
+        XML.toJSONObject(new StringReader(xmlFailure), config, (JSONObject jo) -> {
+            Assert.fail("Should have thrown an exception for malformed XML");
+            latch.countDown();
+        }, (Exception e) -> {
+            Assert.assertNotNull(e);
+            latch.countDown(); // Count down on catching an exception
+        });
+
+        latch.await();  // Wait for both operations (success and failure) to complete
+    }
+
+
     /**
      * JSONObject from a null XML string.
      * Expects a NullPointerException
