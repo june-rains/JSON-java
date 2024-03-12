@@ -612,7 +612,8 @@ public class XML {
             tagName = (String) token;
             if(targetDepth == currentNestingDepth) {
                 if(!tagName.equals(targetTag)) {
-                    throw x.syntaxError("path pointer format error: path not exist!");
+                    x.skipPast("<" + targetTag);
+//                    throw x.syntaxError("path pointer format error: path not exist!");
                 }
             }
             token = null;
@@ -714,7 +715,9 @@ public class XML {
                             if (currentNestingDepth == config.getMaxNestingDepth()) {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
-
+                            if(currentNestingDepth == targetDepth) {
+                                tagName = targetTag;
+                            }
                             if (parse2(x, jsonObject, tagName, config, currentNestingDepth + 1, targetTag, parseFinish, res, targetDepth)) {
                                 if(parseFinish[0]) {
                                     return true;
@@ -730,29 +733,29 @@ public class XML {
                                         context.append(tagName, jsonObject);
                                     }
                                 } else {
+                                    if (jsonObject.length() == 0) {
+                                        context.accumulate(tagName, "");
+                                    } else if (jsonObject.length() == 1
+                                            && jsonObject.opt(config.getcDataTagName()) != null) {
+                                        context.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
+                                    } else {
+                                        context.accumulate(tagName, jsonObject);
+                                    }
+
+                                    if(tagName.equals(targetTag)) {
                                         if (jsonObject.length() == 0) {
-                                            context.accumulate(tagName, "");
+                                            res.accumulate(tagName, "");
                                         } else if (jsonObject.length() == 1
                                                 && jsonObject.opt(config.getcDataTagName()) != null) {
-                                            context.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
+                                            res.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
                                         } else {
-                                            context.accumulate(tagName, jsonObject);
+                                            res.accumulate(tagName, jsonObject);
                                         }
-
-                                        if(tagName.equals(targetTag)) {
-                                            if (jsonObject.length() == 0) {
-                                                res.accumulate(tagName, "");
-                                            } else if (jsonObject.length() == 1
-                                                    && jsonObject.opt(config.getcDataTagName()) != null) {
-                                                res.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
-                                            } else {
-                                                res.accumulate(tagName, jsonObject);
-                                            }
-                                            parseFinish[0]= true;
-                                            return true;
-                                        } else {
-                                            return false;
-                                        }
+                                        parseFinish[0]= true;
+                                        return true;
+                                    } else {
+                                        return false;
+                                    }
                                 }
                             }
                         }

@@ -88,7 +88,7 @@ public class XMLTest {
             fail("Expecting a JSONException");
         } catch (JSONException e) {
             assertEquals("Expecting an exception message",
-                    "path pointer format error: path not exist! at 174 [character 12 line 4]",
+                    "Misshaped element at 285 [character 12 line 8]",
                     e.getMessage());
         }
     }
